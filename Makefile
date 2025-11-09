@@ -5,7 +5,6 @@ NASM     = nasm
 GCC      = gcc
 LD       = ld
 QEMU     = qemu-system-i386
-VBOXMAN  = VBoxManage
 
 # Directories
 BOOT_DIR    = boot
@@ -24,8 +23,7 @@ KERNEL_OBJS  = $(KERNEL_ENTRY:.asm=.o) $(KERNEL_SRC:.c=.o) $(DRIVER_SRC:.c=.o)
 KERNEL_BIN   = kernel.bin
 
 # Image
-IMG      = boot.img
-VDI      = boot.vdi
+USB      = /dev/sdb
 
 # Compiler/assembler flags
 CFLAGS   = -m32 -ffreestanding -fno-pic -fno-pie -nostdlib -nostartfiles -Wall -Wextra
@@ -35,7 +33,7 @@ NASMFLAGS_ELF  = -f elf32
 # =========================
 # Targets
 # =========================
-all: $(VDI)
+all: $(USB)
 
 # -------------------------
 # Assemble bootloader
@@ -57,20 +55,29 @@ $(KERNEL_BIN): $(KERNEL_OBJS)
 
 # -------------------------
 # Create floppy image and copy bootloader + kernel
-$(IMG): $(BOOT_BIN) $(KERNEL_BIN)
-	# Create empty floppy image (1.44MB)
-	dd if=/dev/zero of=$@ bs=512 count=2880
-	# Copy bootloader
-	dd if=$(BOOT_BIN) of=$@ conv=notrunc
+$(USB): $(BOOT_BIN) $(KERNEL_BIN)
+	# Copy Bootloader to first 436 bytes so as not to overwrite partition
+	dd if=$(BOOT_BIN) of=$@ bs=1 count=436 conv=notrunc
 	# Copy kernel after first sector
-	dd if=$(KERNEL_BIN) of=$@ bs=512 seek=1 conv=notrunc
+	dd if=$(KERNEL_BIN) of=$@ bs=512 seek=1 conv=notrunc status=progress
 
 # -------------------------
-# Convert to VDI for VirtualBox
-$(VDI): $(IMG)
-	$(VBOXMAN) convertdd $(IMG) $@ --format VDI
+partition:
+	sudo dd if=/dev/zero of=$(USB) bs=512 count=1000 conv=notrunc status=progress
+	sudo fdisk $(USB) <<EOF
+		o
+		n
+		p
+		1
+		2048
+
+		a
+		w
+		EOF
+	sudo mkfs.vfat -F 32 $(USB)1
+	@sync
 
 # -------------------------
 # Clean build artifacts
 clean:
-	rm -f $(BOOT_BIN) $(KERNEL_OBJS) $(KERNEL_BIN) $(IMG) $(VDI)
+	rm -f $(BOOT_BIN) $(KERNEL_OBJS) $(KERNEL_BIN)

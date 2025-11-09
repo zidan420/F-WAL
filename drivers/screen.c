@@ -1,5 +1,5 @@
-#include "./screen.h"
-#include "./low_level.h"
+#include "screen.h"
+#include "low_level.h"
 
 int get_screen_offset(int col, int row) {
     /*

@@ -34,12 +34,13 @@ gdt_end:	 		; The reason for putting a label at the end of the
 
 ; GDT descriptior
 gdt_descriptor :
-	dw gdt_end - gdt_start - 1 		; Size of our GDT , always less one of the true size
+	dw gdt_end - gdt_start - 1 		; Size of our GDT, always less one of the true size
 	dd gdt_start 					; Start address of our GDT
+
 ; Define some handy constants for the GDT segment descriptor offsets , which
 ; are what segment registers must contain when in protected mode. For example ,
-; when we set DS = 0 x10 in PM , the CPU knows that we mean it to use the
-; segment described at offset 0 x10 ( i.e. 16 bytes ) in our GDT , which in our
-; case is the DATA segment (0 x0 -> NULL ; 0 x08 -> CODE ; 0 x10 -> DATA )
+; when we set DS=0x10 in PM , the CPU knows that we mean it to use the
+; segment described at offset 0x10 ( i.e. 16 bytes ) in our GDT , which in our
+; case is the DATA segment (0x0 -> NULL ; 0x08 -> CODE ; 0x10 -> DATA )
 CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
