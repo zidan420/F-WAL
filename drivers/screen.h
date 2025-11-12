@@ -2,8 +2,8 @@
 #define SCREEN_H
 
 #define VIDEO_ADDRESS 0xb8000
-#define MAX_ROWS 25
-#define MAX_COLS 80
+#define MAX_ROWS 25			// resolution -> 640x400
+#define MAX_COLS 80 		// width of each char = 8 and height of each char = 16
 #define BYTES_PER_CHAR 2
 
 // Base 16 VGA colors
@@ -26,7 +26,6 @@
 
 // Macro to combine any foreground on background
 #define COLOR(fg, bg)   (((bg) << 4) | (fg))
-
 
 // Screen device I/O ports
 #define REG_SCREEN_CTRL 0x3D4
