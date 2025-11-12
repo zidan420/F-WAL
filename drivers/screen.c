@@ -80,7 +80,7 @@ void print_char ( char character , int col , int row , char attribute_byte ) {
 	
 	/* If attribute byte is zero , assume the default style . */
 	if (! attribute_byte ) {
-		attribute_byte = WHITE_ON_BLACK ;
+		attribute_byte = COLOR(WHITE, BLACK) ;
 	}
 	
 	/* Get the video memory offset for the screen location */
@@ -122,7 +122,7 @@ void clear_screen () {
 	/* Loop through video memory and write blank characters . */
 	for ( row =0; row < MAX_ROWS ; row ++) {
 		for ( col =0; col < MAX_COLS ; col ++) {
-		print_char (' ' , col, row, WHITE_ON_BLACK );
+		print_char (' ' , col, row, COLOR(WHITE, BLACK) );
 		}
 	}
 	// Move the cursor back to the top left .
@@ -136,6 +136,6 @@ void print_at(char* message, int col, int row) {
     int i = 0;
     while (message[i] != 0) {
         // Pass -1, -1 so print_char uses current cursor and auto-advances
-        print_char(message[i++], -1, -1, WHITE_ON_BLACK);
+        print_char(message[i++], -1, -1, COLOR(WHITE, BLACK));
     }
 }
