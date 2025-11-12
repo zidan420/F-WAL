@@ -1,3 +1,4 @@
+#include "graphics.h"
 #include "screen.h"
 
 void draw_rect(int x, int y, int width, int height, char color){

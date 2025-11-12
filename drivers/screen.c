@@ -1,5 +1,6 @@
 #include "screen.h"
 #include "low_level.h"
+#include "graphics.h"
 
 int get_screen_offset(int col, int row) {
     /*
@@ -129,13 +130,13 @@ void clear_screen () {
 	set_cursor ( get_screen_offset (0 , 0));
 }
 
-void print_at(char* message, int col, int row) {
+void print_at(char* message, int col, int row, char attribute_byte) {
     if (col >= 0 && row >= 0) {
         set_cursor(get_screen_offset(col, row));
     }
     int i = 0;
     while (message[i] != 0) {
         // Pass -1, -1 so print_char uses current cursor and auto-advances
-        print_char(message[i++], -1, -1, COLOR(WHITE, BLACK));
+        print_char(message[i++], -1, -1, attribute_byte);
     }
 }
