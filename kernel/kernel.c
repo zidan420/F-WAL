@@ -13,7 +13,7 @@ void main() {
     clear_screen();
     // draw the logo at the center
     draw_logo(15, 8);
-    delay(1000);
+    delay(5000);
     clear_screen();
     
     // 2. Now, draw the terminal. Keyboard input should start printing 
