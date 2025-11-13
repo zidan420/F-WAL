@@ -1,5 +1,3 @@
-// kernel/kernel.c (Updated)
-
 #include "../drivers/screen.h"
 #include "../drivers/timer.h"
 #include "logo.h"

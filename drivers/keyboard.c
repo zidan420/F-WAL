@@ -9,7 +9,12 @@
 void pic_eoi(unsigned char irq); 
 
 // Global state variable defined in kernel/kernel.c
-int shift_pressed = 0; 
+int shift_pressed = 0;
+int caps_lock = 0;
+unsigned char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
+int kb_buffer_head = 0;
+int kb_buffer_tail = 0;
+int kb_buffer_count = 0;
 
 /**
  * @brief Handles the keyboard interrupt (IRQ 1).
@@ -17,43 +22,63 @@ int shift_pressed = 0;
 void keyboard_handler() {
     unsigned char scan_code = port_byte_in(KEYBOARD_DATA_PORT);
 
-    // 1. Handle Modifier Keys (Shift)
+    // Handle modifiers
     if (scan_code == LSHIFT_MAKE || scan_code == RSHIFT_MAKE) {
         shift_pressed = 1;
     } else if (scan_code == LSHIFT_BREAK || scan_code == RSHIFT_BREAK) {
         shift_pressed = 0;
-    } 
-    
-    // 2. Check if it's a Make Code (Key Press)
-    // A break code has the 0x80 bit set, so a make code is less than 0x80
-    else if (scan_code < 0x80) {
-        
+    } else if (scan_code == CAPS_MAKE) {
+        caps_lock = !caps_lock;
+    } else if (scan_code < 0x80) {
         unsigned char character = 0;
+        if (scan_code < 128) {
+            // Get base from shift state (handles symbols correctly)
+            character = shift_pressed ? SHIFTED_MAP[scan_code] : QWERTY_MAP[scan_code];
+        }
+        if (character == 0) {
+            pic_eoi(1);
+            return;  // Unmapped
+        }
 
-        // Use the appropriate keymap based on the Shift state
-        if (shift_pressed) {
-            // Ensure scan_code is within bounds of the SHIFTED_MAP
-            if (scan_code < sizeof(SHIFTED_MAP)) {
-                 character = SHIFTED_MAP[scan_code];
+        // For letters only: Apply caps (XOR with shift)
+        if (character >= 'a' && character <= 'z') {
+            int effective_case = shift_pressed ^ caps_lock;
+            if (effective_case) {
+                character -= 32;  // To 'A'-'Z'
             }
-        } else {
-            // Ensure scan_code is within bounds of the QWERTY_MAP
-            if (scan_code < sizeof(QWERTY_MAP)) {
-                character = QWERTY_MAP[scan_code];
+        } else if (character >= 'A' && character <= 'Z') {
+            int effective_case = shift_pressed ^ caps_lock;
+            if (!effective_case) {
+                character += 32;  // To 'a'-'z' (if somehow uppercase in base)
             }
         }
 
-        // 3. Print the translated character
-        if (character != 0) {
-            // Print the actual character
-            print_char(character, -1, -1, COLOR(WHITE, GREEN)); 
-        } else {
-             // Print a placeholder for unmapped or special keys (like F-keys)
-             // print_char('?', -1, -1, COLOR(RED, BLACK));
-        }
-    } 
-    // We ignore Break Codes for non-modifier keys for simplicity.
-    
-    // Acknowledge the interrupt to the PIC (IRQ 1)
+        kb_enqueue(character);
+    }
     pic_eoi(1);
+}
+
+void kb_enqueue(unsigned char c) {
+    if (kb_buffer_count >= KEYBOARD_BUFFER_SIZE) {
+        // Buffer full: Drop oldest (or handle overflow, e.g., beep)
+        kb_buffer_tail = (kb_buffer_tail + 1) % KEYBOARD_BUFFER_SIZE;
+    } else {
+        kb_buffer_count++;
+    }
+    keyboard_buffer[kb_buffer_head] = c;
+    kb_buffer_head = (kb_buffer_head + 1) % KEYBOARD_BUFFER_SIZE;
+}
+
+unsigned char kb_dequeue(void) {
+    if (kb_buffer_count == 0) {
+        return 0;  // Empty
+    }
+    unsigned char c = keyboard_buffer[kb_buffer_tail];
+    kb_buffer_tail = (kb_buffer_tail + 1) % KEYBOARD_BUFFER_SIZE;
+    kb_buffer_count--;
+    return c;
+}
+
+int kb_has_input(void) {
+    return kb_buffer_count > 0;
 }
