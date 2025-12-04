@@ -3,8 +3,10 @@
 #include "logo.h"
 #include "terminal.h"
 
-// Declare the ISR installation function
-void isr_install(); 
+/*
+    Defined in kernel/isr.c
+*/
+extern void isr_install();
 
 void main() {
     // 1. Set up the IDT and PIC
