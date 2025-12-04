@@ -1,6 +1,11 @@
 #include "../drivers/low_level.h"
 #include "../drivers/screen.h"
 
+/*
+    PIC1 -> Master PIC
+    PIC2 -> Slave PIC
+*/
+
 // PIC ports
 #define PIC1_COMMAND 0x20
 #define PIC1_DATA 0x21
@@ -48,14 +53,27 @@ void isr_install() {
     // Master PIC (0x20-0x27) interrupt vectors moved from 0x08-0x0F to 0x20-0x27
     // Slave PIC (0xA0-0xA7) interrupt vectors moved from 0x70-0x77 to 0x28-0x2F
     port_byte_out(PIC1_COMMAND, 0x11); // Start initialization sequence
-    port_byte_out(PIC2_COMMAND, 0x11);
+    port_byte_out(PIC2_COMMAND, 0x11);  // ICW1
 
+    /*
+        tells the PIC where in the IDT its IRQs start
+    */
     port_byte_out(PIC1_DATA, 0x20); // ICW2: Master PIC vector offset (0x20)
     port_byte_out(PIC2_DATA, 0x28); // ICW2: Slave PIC vector offset (0x28)
 
     port_byte_out(PIC1_DATA, 0x04); // ICW3: Master PIC tells slave it's at IRQ2
     port_byte_out(PIC2_DATA, 0x02); // ICW3: Slave PIC tells master it's slave ID is 2
 
+    /*
+        Optional: set special modes
+        BIT     Meaning
+    ---------  --------------------
+        0   8086/88 mode (1) vs MCS-80/85 mode (0)
+        1   Auto EOI (1 = automatically send EOI after ISR)
+        2   Buffered mode (master/slave)
+        3   Buffered mode
+        4   Special fully nested mode (for slave)
+    */
     port_byte_out(PIC1_DATA, 0x01); // ICW4: 8086/AEO mode
     port_byte_out(PIC2_DATA, 0x01);
 
@@ -81,8 +99,14 @@ void isr_install() {
 
 // Function to send EOI (End of Interrupt) to the PIC
 void pic_eoi(unsigned char irq) {
+    /*
+        Send EOI to slave PIC
+    */
     if (irq >= 8) {
         port_byte_out(PIC2_COMMAND, PIC_EOI);
     }
+    /*
+        Send EOI to master PIC
+    */
     port_byte_out(PIC1_COMMAND, PIC_EOI);
 }
