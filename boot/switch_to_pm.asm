@@ -1,3 +1,4 @@
+; boot/switch_to_pm.asm
 [ bits 16]
 ; Switch to protected mode
 switch_to_pm:

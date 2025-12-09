@@ -1,17 +1,10 @@
+/* kernel/kernel.c */
 #include "../drivers/screen.h"
 #include "../drivers/timer.h"
 #include "logo.h"
 #include "terminal.h"
 
-/*
-    Defined in kernel/isr.c
-*/
-extern void isr_install();
-
 void main() {
-    // 1. Set up the IDT and PIC
-    isr_install(); 
-    
     clear_screen();
     // draw the logo at the center
     draw_logo(15, 8);

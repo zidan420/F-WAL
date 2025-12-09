@@ -16,7 +16,7 @@ BOOT_SRC = $(BOOT_DIR)/boot.asm
 BOOT_BIN = boot.bin
 
 # Kernel
-KERNEL_ASM   = $(wildcard $(KERNEL_DIR)/*.asm)
+KERNEL_ASM   = $(wildcard $(KERNEL_DIR)/*.asm) $(wildcard $(DRIVERS_DIR)/*.asm)
 KERNEL_SRC   = $(wildcard $(KERNEL_DIR)/*.c)
 DRIVER_SRC   = $(wildcard $(DRIVERS_DIR)/*.c)
 KERNEL_OBJS  = $(KERNEL_ASM:.asm=.o) $(KERNEL_SRC:.c=.o) $(DRIVER_SRC:.c=.o)

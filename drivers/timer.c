@@ -1,3 +1,4 @@
+/* drivers/timer.c */
 void delay(unsigned int ticks) {
     // Simple busy-wait loop
     for (unsigned int i = 0; i < ticks; i++) {

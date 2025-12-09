@@ -1,3 +1,4 @@
+/* kernel/logo.c */
 #include "../drivers/graphics.h"
 #include "../drivers/screen.h"
 

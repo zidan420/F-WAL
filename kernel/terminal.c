@@ -1,8 +1,9 @@
+/* kernel/terminal.c */
 #include "../drivers/graphics.h"
 #include "../drivers/screen.h"
 #include "../drivers/keyboard.h"
 
-// Define content area boundaries (based on your draw_rect calls)
+// Define content area boundaries
 #define CONTENT_TOP 2
 #define CONTENT_BOTTOM 22  // Last row for content (draw_rect height 21 from row 2 → row 22)
 #define CONTENT_LEFT 1
@@ -37,74 +38,50 @@ void scroll_terminal() {
 }
 
 void draw_terminal() {
+
     draw_rect(0, 0, 80, 25, LIGHT_BLUE);
     draw_rect(0, 0, 80, 2, BLUE);
     draw_rect(1, 2, 78, 21, GREEN);
+
     print_at("Terminal", 36, 1, COLOR(WHITE, BLUE));
     print_at(">>> ", 2, 3, COLOR(BLUE, GREEN));
 
-    int char_printed = 0, char_x = 6, char_y = 3;  // Start after initial prompt
+    int x = 6;
+    int y = 3;
 
     while (1) {
-        if (kb_has_input()) {
-            unsigned char c = kb_dequeue();
-            if (c == '\n') {
-                char_printed = 0;
-                char_x = 2;
-                char_y++;
-                // Check for scroll after increment
-                if (char_y > CONTENT_BOTTOM) {
+        char c = keyboard_read_char();
+        if (!c) continue;
+
+        if (c == '\b') {
+            if (x > 6) {  // Do not delete the prompt
+                x--;
+                print_char(' ', x, y, COLOR(WHITE, GREEN));
+            }
+        }
+
+        else if (c == '\n') {
+            y++;
+            x = 2;
+            print_at(">>> ", x, y, COLOR(BLUE, GREEN));
+            x = 6;
+
+            if (y > CONTENT_BOTTOM - 1) {
+                scroll_terminal();
+                y = CONTENT_BOTTOM - 1;
+            }
+        }
+
+        else {
+            print_char(c, x, y, COLOR(WHITE, GREEN));
+            x++;
+
+            if (x >= CONTENT_LEFT + CONTENT_WIDTH) {
+                x = 2;
+                y++;
+                if (y > CONTENT_BOTTOM - 1) {
                     scroll_terminal();
-                    char_y = CONTENT_BOTTOM;
-                }
-                print_at(">>> ", char_x, char_y, COLOR(BLUE, GREEN));
-                char_x += 4;  // Advance past ">>> "
-            } else if (c == '\b') {
-                if (char_printed > 0) {
-                    // Prevent backspacing past initial prompt position
-                    if (!(char_y == 3 && char_x <= 6)) {
-                        if (--char_x < 2) {  // Wrap to previous line if at start of line
-                            char_x = 78 - 1;  // End of previous line (adjust if needed)
-                            char_y--;
-                            // Prevent going above content top
-                            if (char_y < CONTENT_TOP + 1) {
-                                char_y = CONTENT_TOP + 1;  // Min row 3
-                                char_x = 6;  // Reset to start if over
-                            }
-                        }
-                        char_printed--;
-                        // Erase the character
-                        print_char(' ', char_x, char_y, COLOR(WHITE, GREEN));
-                        set_cursor(get_screen_offset(char_x, char_y));  // Move cursor back
-                    }
-                }
-            } else if (c == '\t') {
-                int spaces = 0;
-                while (spaces < 4) {
-                    print_char(' ', char_x, char_y, COLOR(WHITE, GREEN));
-                    char_printed++;
-                    if (++char_x == 78) {
-                        char_x = 2;
-                        char_y++;
-                        // Check for scroll after increment
-                        if (char_y > CONTENT_BOTTOM) {
-                            scroll_terminal();
-                            char_y = CONTENT_BOTTOM;
-                        }
-                    }
-                    spaces++;
-                }
-            } else {
-                print_char(c, char_x, char_y, COLOR(WHITE, GREEN));
-                char_printed++;
-                if (++char_x == 78) {
-                    char_x = 2;
-                    char_y++;
-                    // Check for scroll after increment
-                    if (char_y > CONTENT_BOTTOM) {
-                        scroll_terminal();
-                        char_y = CONTENT_BOTTOM;
-                    }
+                    y = CONTENT_BOTTOM - 1;
                 }
             }
         }

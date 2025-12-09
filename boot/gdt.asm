@@ -1,3 +1,4 @@
+; boot/gdt.asm
 ; GDT
 gdt_start:
 
