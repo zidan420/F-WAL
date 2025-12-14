@@ -1,9 +1,9 @@
 #ifndef FILESYSTEM_H
 #define FILESYSTEM_H
 
-#define MAX_FILES 32
-#define MAX_FILENAME 16
-#define MAX_FILE_SIZE 512
+#define MAX_FILES 3
+#define MAX_FILENAME 10
+#define MAX_FILE_SIZE 50
 
 typedef struct {
     char name[MAX_FILENAME];

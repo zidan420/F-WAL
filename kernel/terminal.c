@@ -12,6 +12,9 @@
 #define CONTENT_BORDER_BG LIGHT_BLUE
 #define CONTENT_BG GREEN
 
+static char input_buffer[128];
+static char filename[MAX_FILENAME];
+
 // Compare first n characters of two strings
 int strncmp_fs(const char* a, const char* b, int n) {
     for (int i = 0; i < n; i++) {
@@ -57,8 +60,7 @@ void scroll_terminal() {
 
 
 void draw_terminal() {
-    fs_init(); // initialize RAM filesystem
-
+    fs_init();
     draw_rect(0, 0, 80, 25, LIGHT_BLUE);
     draw_rect(0, 0, 80, 2, BLUE);
     draw_rect(1, 2, 78, 21, GREEN);
@@ -67,7 +69,6 @@ void draw_terminal() {
 
     int x = 6;
     int y = 3;
-    char input_buffer[128];
     int input_pos = 0;
 
     while (1) {
@@ -80,7 +81,8 @@ void draw_terminal() {
                 input_pos--;
                 print_char(' ', x, y, COLOR(WHITE, GREEN));
             }
-        } else if (c == '\n') {
+        } 
+        else if (c == '\n') {
             input_buffer[input_pos] = '\0';
 
             // Simple RAM FS test: ls command
@@ -102,7 +104,6 @@ void draw_terminal() {
             else if (strncmp_fs(input_buffer, "echo ", 5) == 0) {
                 // Find filename (next word)
                 int i = 5; // skip "echo "
-                char filename[MAX_FILENAME];
                 int fi = 0;
 
                 // Extract filename until space or end
@@ -124,6 +125,49 @@ void draw_terminal() {
                 print_at("File written", 2, y + 1, COLOR(WHITE, GREEN));
                 y++; // advance cursor for prompt
             }
+            // RAM FS test: cat command
+
+            else if (strncmp_fs(input_buffer, "cat ", 4) == 0) {
+
+                int fi = 0, i = 4;
+
+                
+
+                // Extract filename (Keep this logic)
+
+                while (input_buffer[i] != ' ' && input_buffer[i] != '\0' && fi < MAX_FILENAME - 1) {
+
+                    filename[fi++] = input_buffer[i++];
+
+                }
+
+                filename[fi] = '\0';
+
+                
+
+                File* f = fs_get_file(filename);
+
+                
+
+                y++;  // Move down for output
+
+                if (f == 0) {
+
+                    print_at("File not found", 2, y, COLOR(WHITE, GREEN));
+
+                } else {
+
+                    print_at("File found (size: ", 2, y, COLOR(WHITE, GREEN));
+
+                    // Simple size printing (optional, could be complex without number to string function)
+
+                    // If you don't have a simple number to string:
+
+                    // print_at("File found.", 2, y, COLOR(WHITE, GREEN));
+
+                }
+
+            } // Keep this closing brace!
 
 
 
@@ -139,7 +183,7 @@ void draw_terminal() {
             }
 
         } else {
-            if (input_pos < sizeof(input_buffer) - 1) {
+            if (input_pos < (int)sizeof(input_buffer) - 1) {
                 input_buffer[input_pos++] = c;
             }
             print_char(c, x, y, COLOR(WHITE, GREEN));
