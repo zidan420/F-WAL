@@ -2,6 +2,7 @@
 #include "../drivers/graphics.h"
 #include "../drivers/screen.h"
 #include "../drivers/keyboard.h"
+#include "filesystem.h"
 
 // Define content area boundaries
 #define CONTENT_TOP 2
@@ -10,6 +11,16 @@
 #define CONTENT_WIDTH 78  // Cols 1–78 for green bg
 #define CONTENT_BORDER_BG LIGHT_BLUE
 #define CONTENT_BG GREEN
+
+// Compare first n characters of two strings
+int strncmp_fs(const char* a, const char* b, int n) {
+    for (int i = 0; i < n; i++) {
+        if (a[i] != b[i]) return a[i] - b[i];
+        if (a[i] == '\0') return 0;
+    }
+    return 0;
+}
+
 
 // Function to scroll the content area (keep header fixed)
 void scroll_terminal() {
@@ -37,45 +48,68 @@ void scroll_terminal() {
     // Optional: Update cursor if needed, but handled in print calls
 }
 
+
+
 void draw_terminal() {
+    fs_init(); // initialize RAM filesystem
 
     draw_rect(0, 0, 80, 25, LIGHT_BLUE);
     draw_rect(0, 0, 80, 2, BLUE);
     draw_rect(1, 2, 78, 21, GREEN);
-
     print_at("Terminal", 36, 1, COLOR(WHITE, BLUE));
     print_at(">>> ", 2, 3, COLOR(BLUE, GREEN));
 
     int x = 6;
     int y = 3;
+    char input_buffer[128];
+    int input_pos = 0;
 
     while (1) {
         char c = keyboard_read_char();
         if (!c) continue;
 
         if (c == '\b') {
-            if (x > 6) {  // Do not delete the prompt
+            if (x > 6) {
                 x--;
+                input_pos--;
                 print_char(' ', x, y, COLOR(WHITE, GREEN));
             }
-        }
+        } else if (c == '\n') {
+            input_buffer[input_pos] = '\0';
 
-        else if (c == '\n') {
+            // Simple RAM FS test: ls command
+            if (strncmp_fs(input_buffer, "ls", 2) == 0) {
+                int count = fs_get_file_count();
+                int line_y = y + 1; // start printing just below the current prompt
+                if (count == 0) {
+                    print_at("No files found", 2, line_y, COLOR(WHITE, GREEN));
+                    line_y++;
+                } else {
+                    for (int i = 0; i < count; i++) {
+                        File* f = fs_get_file_by_index(i);
+                        print_at(f->name, 2, line_y++, COLOR(WHITE, GREEN)); // increment after each file
+                    }
+                }
+                y = line_y;  // move prompt down to after output
+            }
+
             y++;
             x = 2;
             print_at(">>> ", x, y, COLOR(BLUE, GREEN));
             x = 6;
+            input_pos = 0;
 
             if (y > CONTENT_BOTTOM - 1) {
                 scroll_terminal();
                 y = CONTENT_BOTTOM - 1;
             }
-        }
 
-        else {
+        } else {
+            if (input_pos < sizeof(input_buffer) - 1) {
+                input_buffer[input_pos++] = c;
+            }
             print_char(c, x, y, COLOR(WHITE, GREEN));
             x++;
-
             if (x >= CONTENT_LEFT + CONTENT_WIDTH) {
                 x = 2;
                 y++;

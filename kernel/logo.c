@@ -15,7 +15,7 @@ void draw_logo(int x, int y){
 	    BLUE
 	};
 
-	for(int i = 0; i < 4; i++){
+	for(int i = 0; i < 1; i++){
 		char color = fade_steps[i];
 
 		clear_screen();
