@@ -22,6 +22,9 @@ File* fs_get_file(const char* name);
 
 // New functions for terminal access (freestanding)
 int fs_get_file_count(void);
+// Write data into a file (overwrite). Returns number of bytes written.
+int fs_write_file(File* file, const char* data, int len);
+
 File* fs_get_file_by_index(int idx);
 
 #endif

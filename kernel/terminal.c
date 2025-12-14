@@ -21,6 +21,12 @@ int strncmp_fs(const char* a, const char* b, int n) {
     return 0;
 }
 
+int strlen_fs(const char* s) {
+    int len = 0;
+    while (s[len] != '\0') len++;
+    return len;
+}
+
 
 // Function to scroll the content area (keep header fixed)
 void scroll_terminal() {
@@ -92,6 +98,34 @@ void draw_terminal() {
                 }
                 y = line_y;  // move prompt down to after output
             }
+            // RAM FS test: echo command
+            else if (strncmp_fs(input_buffer, "echo ", 5) == 0) {
+                // Find filename (next word)
+                int i = 5; // skip "echo "
+                char filename[MAX_FILENAME];
+                int fi = 0;
+
+                // Extract filename until space or end
+                while (input_buffer[i] != ' ' && input_buffer[i] != '\0' && fi < MAX_FILENAME - 1) {
+                    filename[fi++] = input_buffer[i++];
+                }
+                filename[fi] = '\0';
+
+                // Skip space to content
+                while (input_buffer[i] == ' ') i++;
+                char* content = &input_buffer[i];
+
+                // Create or get file
+                File* f = fs_get_file(filename);
+                if (!f) f = fs_create_file(filename);
+                fs_write_file(f, content, strlen_fs(content));
+
+                // Optional feedback
+                print_at("File written", 2, y + 1, COLOR(WHITE, GREEN));
+                y++; // advance cursor for prompt
+            }
+
+
 
             y++;
             x = 2;

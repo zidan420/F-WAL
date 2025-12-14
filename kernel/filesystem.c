@@ -33,6 +33,17 @@ File* fs_get_file(const char* name) {
     return 0;
 }
 
+int fs_write_file(File* file, const char* data, int len) {
+    if (!file) return -1;
+    if (len > MAX_FILE_SIZE) len = MAX_FILE_SIZE;
+    for (int i = 0; i < len; i++) {
+        file->data[i] = data[i];
+    }
+    file->size = len;
+    return len;
+}
+
+
 // ---------------------------
 // Terminal-accessible wrappers
 // ---------------------------
