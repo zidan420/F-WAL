@@ -3,7 +3,6 @@
 #include "../drivers/timer.h"
 #include "logo.h"
 #include "terminal.h"
-#include "filesystem.h"
 
 void main() {
     clear_screen();
