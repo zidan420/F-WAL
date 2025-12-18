@@ -11,4 +11,6 @@ Change the line that says ```USB      = /dev/sdb``` to your pendrive partition. 
 After that, all you have to do is run the following command once:<br>
 ```make partition```<br>
 It will create a FAT32 partition to your pendrive. Then everytime you want to run the OS, just use the command:<br>
-```make```
+```make clean && make && qemu-system-i386 -drive format=raw,file=/dev/sdX```
+
+

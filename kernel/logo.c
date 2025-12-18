@@ -15,7 +15,7 @@ void draw_logo(int x, int y){
 	    BLUE
 	};
 
-	for(int i = 0; i < 1; i++){
+	for(int i = 0; i < 4; i++){
 		char color = fade_steps[i];
 
 		clear_screen();
@@ -53,6 +53,6 @@ void draw_logo(int x, int y){
 		draw_rect(x, y, width*scale, height*5, color);
 		draw_rect(x, y+2*width*scale, 3*width*scale, height, color);
 
-		delay(2000);
+		delay(1500);
 	}
 }
